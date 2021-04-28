@@ -181,8 +181,7 @@ def delete_data():
 def initiate_processing():
     """ This function is called by scheduler which invokes entire pipeline for every time interval that has been set."""
     logging.info("initiate processing triggered")
-    parameter_reader = configparser.ConfigParser()
-    date_column = parameter_reader.get("aggregation", "date_column")
+    from Data_collector.parameter_collector import date_column
     data_upload = identify_columns_to_aggregate(date_column)
     # if aggregated data is uploaded succesfully to database(s), imput files downloaded from AWS S3 are deleted
     if data_upload == True:
