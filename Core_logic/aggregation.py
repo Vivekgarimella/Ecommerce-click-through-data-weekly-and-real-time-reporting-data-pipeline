@@ -13,7 +13,7 @@ from Data_collector.data_loader import load_data
 from Data_collector.parameter_collector import source_path, \
     destination_path, target_column, date_column, period, postgres_port, postgres_user, postgres_password, \
     columns, postgres_host, postgres_database, postgres_data_append, mongodb_database, mongodb_host, \
-    collection_name, insert_into_postgre, insert_into_mongo, mongodb_data_append,time_interval
+    collection_name, insert_into_postgre, insert_into_mongo, mongodb_data_append,time_interval,is_local_environment
 from Data_collector.write_to_DB import dataframe_to_postgres, dataframe_to_mongo
 
 """ 
@@ -181,6 +181,8 @@ def delete_data():
 def initiate_processing():
     """ This function is called by scheduler which invokes entire pipeline for every time interval that has been set."""
     logging.info("initiate processing triggered")
+
+    # importi date column overhere because we can't send a parameter to a function when called
     from Data_collector.parameter_collector import date_column
     data_upload = identify_columns_to_aggregate(date_column)
     # if aggregated data is uploaded succesfully to database(s), imput files downloaded from AWS S3 are deleted
@@ -195,9 +197,15 @@ if __name__ == '__main__':
                         format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                         datefmt='%H:%M:%S',
                         level=logging.INFO)
-    # scheduler is initiated
-    logging.info("configuring scheduler")
-    scheduler = BlockingScheduler()
-    scheduler.add_job(initiate_processing, 'interval', hours=float(time_interval))
-    logging.info("Scheduler initiated")
-    scheduler.start()
+
+    if is_local_environment:
+        logging.info("Execution is on local environment")
+        # scheduler is initiated
+        logging.info("configuring scheduler")
+        scheduler = BlockingScheduler()
+        scheduler.add_job(initiate_processing, 'interval', hours=float(time_interval))
+        logging.info("Scheduler initiated")
+        scheduler.start()
+    else:
+        logging.info("Execution is on AWS envronment")
+        initiate_processing()
